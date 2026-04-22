@@ -454,7 +454,7 @@
       <div class="stat">
         <div class="stat-label">Total Due</div>
         <div><span class="stat-value" id="statTotal">—</span></div>
-        <div class="stat-sub">Upcoming (positive days)</div>
+        <div class="stat-sub">Today + upcoming</div>
       </div>
       <div class="stat">
         <div class="stat-label">Due Today</div>
@@ -738,10 +738,10 @@ function renderLink(row) {
 /* ─── Render ─────────────────────────────────────────── */
 function renderStats() {
   const rows = state.rawData;
-  const total = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d > 0; }).length;
+  const total = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d >= 0; }).length;
   const today = rows.filter(r => parseNum(r['Deadline (days)']) === 0).length;
-  const week  = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d > 0 && d <= 7;  }).length;
-  const month = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d > 0 && d <= 30; }).length;
+  const week  = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d >= 0 && d <= 7;  }).length;
+  const month = rows.filter(r => { const d = parseNum(r['Deadline (days)']); return d !== null && d >= 0 && d <= 30; }).length;
   $('statTotal').textContent = total.toString();
   $('statToday').textContent = today.toString();
   $('statWeek').textContent = week.toString();
