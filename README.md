@@ -1,1 +1,1 @@
-# promos-dashboard
+# banners-dashboard
