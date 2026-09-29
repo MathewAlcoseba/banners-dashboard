@@ -239,18 +239,22 @@
             }
         }
 
-        /* ─── Connect panel ───────────────────────────────────── */
-        .connect-panel {
+        /* ─── Loading panel ───────────────────────────────────── */
+        .loading-panel {
             background: var(--bg-elevated);
             border: 1px solid var(--border);
-            padding: 72px 48px;
+            padding: 96px 48px;
             text-align: center;
             margin-bottom: 32px;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
         }
 
-        .connect-panel::before {
+        .loading-panel::before {
             content: "";
             position: absolute;
             top: 0;
@@ -260,70 +264,52 @@
             background: var(--yellow);
         }
 
-        .connect-eyebrow {
+        .loading-panel.error::before { background: var(--urgent); }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border-strong);
+            border-top-color: var(--yellow);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-panel.error .loading-spinner {
+            border-top-color: var(--urgent);
+            animation-duration: 1.6s;
+        }
+
+        .loading-eyebrow {
             font-family: var(--font-mono);
             font-size: 10px;
             letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin-bottom: 18px;
         }
 
-        .connect-title {
+        .loading-panel.error .loading-eyebrow { color: var(--urgent); }
+
+        .loading-title {
             font-family: var(--font-display);
-            font-size: 52px;
+            font-size: 48px;
             font-weight: 900;
             line-height: 0.95;
             text-transform: uppercase;
-            margin-bottom: 16px;
         }
 
-        .connect-title em {
+        .loading-title em {
             font-style: normal;
             color: var(--yellow);
         }
 
-        .connect-sub {
+        .loading-panel.error .loading-title em { color: var(--urgent); }
+
+        .loading-sub {
             color: var(--text-muted);
-            max-width: 560px;
-            margin: 0 auto 36px;
+            max-width: 520px;
             line-height: 1.65;
             font-size: 14px;
-        }
-
-        .connect-input-row {
-            display: flex;
-            gap: 8px;
-            max-width: 680px;
-            margin: 0 auto;
-        }
-
-        .url-input {
-            flex: 1;
-            background: var(--bg);
-            border: 1px solid var(--border-strong);
-            color: var(--text);
-            padding: 13px 16px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            transition: border-color 0.15s ease;
-        }
-
-        .url-input:focus {
-            outline: none;
-            border-color: var(--yellow);
-        }
-
-        .url-input::placeholder {
-            color: var(--text-dim);
-        }
-
-        .connect-error {
-            color: var(--urgent);
-            font-family: var(--font-mono);
-            font-size: 12px;
-            margin-top: 20px;
-            min-height: 16px;
         }
 
         /* ─── Stats ───────────────────────────────────────────── */
@@ -786,12 +772,12 @@
                 gap: 20px;
             }
 
-            .connect-panel {
-                padding: 48px 24px;
+            .loading-panel {
+                padding: 64px 24px;
             }
 
-            .connect-title {
-                font-size: 36px;
+            .loading-title {
+                font-size: 32px;
             }
         }
 
@@ -841,32 +827,14 @@
                 <div class="status-item">
                     <span class="timestamp" id="timestamp">—</span>
                 </div>
-                <button class="btn" id="refreshBtn" style="display:none;">
-                    <svg class="btn-icon refresh-icon" id="refreshIcon" viewBox="0 0 16 16" fill="none"
-                        stroke="currentColor" stroke-width="1.5">
-                        <path d="M14 8a6 6 0 1 1-1.76-4.24M14 3v3h-3" />
-                    </svg>
-                    Refresh
-                </button>
             </div>
         </header>
 
-        <div id="connectPanel" class="connect-panel">
-            <div class="connect-eyebrow">Source</div>
-            <h2 class="connect-title">Connect your <em>mirror sheet</em></h2>
-            <p class="connect-sub">
-                Paste the published CSV URL of your mirror sheet's <code
-                    style="font-family:var(--font-mono);color:var(--yellow);font-size:12px;">[PROMOS] CMS &amp; Banners</code>
-                tab.
-                The dashboard will pull live data and show every promo with a deadline that hasn't yet passed.
-            </p>
-            <div class="connect-input-row">
-                <input type="url" id="urlInput" class="url-input"
-                    placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" autocomplete="off"
-                    spellcheck="false">
-                <button class="btn btn-primary" id="connectBtn">Connect</button>
-            </div>
-            <div class="connect-error" id="connectError"></div>
+        <div id="loadingPanel" class="loading-panel">
+            <div class="loading-spinner"></div>
+            <div class="loading-eyebrow" id="loadingEyebrow">Loading</div>
+            <h2 class="loading-title" id="loadingTitle">Fetching live <em>banner data</em></h2>
+            <p class="loading-sub" id="loadingSub">Pulling the latest from the mirror sheet…</p>
         </div>
 
         <div id="dashboard" style="display:none;">
@@ -925,15 +893,6 @@
                 </table>
             </div>
         </div>
-<!-- 
-        <footer>
-            <div>Easybet · Creatives Operations</div>
-            <div>
-                <a id="reconnectLink">Change source</a>
-                <span style="padding: 0 12px; color: var(--text-dim);">·</span>
-                <span id="autoRefreshLabel">Manual refresh</span>
-            </div>
-        </footer> -->
 
     </div>
 
@@ -1116,11 +1075,6 @@
             return `<span class="cell-secondary">${escapeHtml(v) || '—'}</span>`;
         }
 
-        function renderMono(row, col) {
-            const v = row[col] || '';
-            return `<span class="cell-mono">${escapeHtml(v) || '—'}</span>`;
-        }
-
         function renderTime(row, col) {
             const raw = (row[col] || '').trim();
             if (!raw) return '<span class="cell-time" style="color:var(--text-dim);">—</span>';
@@ -1140,17 +1094,6 @@
             const v = (row[col] || '').trim();
             if (!v) return '<span class="cell-note-empty">—</span>';
             return `<div class="cell-note">${escapeHtml(v)}</div>`;
-        }
-
-        function renderStatusChip(row, col) {
-            const v = (row[col] || '').trim();
-            if (!v) return '<span class="chip inactive">—</span>';
-            const lower = v.toLowerCase();
-            let cls = '';
-            if (/active|done|complete|live/.test(lower)) cls = 'active';
-            else if (/pending|progress|review|requested/.test(lower)) cls = 'pending';
-            else if (/inactive|off|paused|archived/.test(lower)) cls = 'inactive';
-            return `<span class="chip ${cls}">${escapeHtml(v)}</span>`;
         }
 
         function renderLink(row) {
@@ -1243,76 +1186,80 @@
             $('timestamp').textContent = `Last updated ${t}`;
         }
 
-        /* ─── Connect / refresh ──────────────────────────────── */
-        async function connect(url, isRefresh = false) {
-            const icon = $('refreshIcon');
+        /* ─── Loading panel helpers ──────────────────────────── */
+        function showLoading(state) {
+            const panel = $('loadingPanel');
+            const eyebrow = $('loadingEyebrow');
+            const title = $('loadingTitle');
+            const sub = $('loadingSub');
+            if (!panel) return;
+            panel.style.display = 'flex';
+            panel.classList.remove('error');
+            if (state === 'initial') {
+                eyebrow.textContent = 'Loading';
+                title.innerHTML = 'Fetching live <em>banner data</em>';
+                sub.textContent = 'Pulling the latest from the mirror sheet…';
+            } else if (state === 'retrying') {
+                eyebrow.textContent = 'Retrying';
+                title.innerHTML = 'Reconnecting to the <em>mirror sheet</em>';
+                sub.textContent = 'The last attempt didn\u2019t complete. Trying again shortly…';
+                panel.classList.add('error');
+            }
+        }
+        function hideLoading() {
+            const panel = $('loadingPanel');
+            if (panel) panel.style.display = 'none';
+        }
+
+        /* ─── Connect (silent under the hood) ────────────────── */
+        let retryTimer = null;
+        async function connect(url, isBackground = false) {
             try {
-                setStatus('live', isRefresh ? 'Refreshing…' : 'Connecting…');
-                if (isRefresh) icon.classList.add('spin');
+                if (!isBackground) setStatus('live', 'Connecting…');
                 const { headers, dataRows } = await fetchAndParse(url);
                 state.url = url;
                 state.headers = headers;
                 state.rawData = dataRows;
                 populateFilterDropdowns();
                 applyFilters();
-                $('connectPanel').style.display = 'none';
+                hideLoading();
                 $('dashboard').style.display = 'block';
-                $('refreshBtn').style.display = 'inline-flex';
-                $('connectError').textContent = '';
                 setStatus('live', 'Live');
                 setTimestamp(new Date());
-                if (url !== DEFAULT_CSV_URL) saveUrl(url); else clearSavedUrl();
+                if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
             } catch (err) {
-                if (isRefresh) { setStatus('error', 'Refresh failed'); console.error(err); }
-                else {
-                    $('connectError').textContent = err.message || 'Something went wrong.';
+                console.error('[Dashboard] Fetch failed:', err);
+                if (!isBackground) {
+                    // Initial load failed — show retry state and try again in 30s
+                    showLoading('retrying');
                     setStatus('error', 'Connection failed');
+                    if (retryTimer) clearTimeout(retryTimer);
+                    retryTimer = setTimeout(() => connect(url, false), 30 * 1000);
+                } else {
+                    // Background refresh failed — leave existing data on screen
+                    setStatus('error', 'Sync failed');
                 }
-            } finally {
-                icon.classList.remove('spin');
             }
         }
 
         /* ─── Events ─────────────────────────────────────────── */
-        $('connectBtn').onclick = () => {
-            const url = $('urlInput').value.trim();
-            if (!url) { $('connectError').textContent = 'Please paste a URL first.'; return; }
-            if (!/docs\.google\.com.*output=csv/i.test(url) && !/\.csv/i.test(url)) {
-                $('connectError').textContent = 'That doesn\u2019t look like a CSV URL. Make sure it ends in &output=csv.';
-                return;
-            }
-            connect(url);
-        };
-        $('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('connectBtn').click(); });
-        $('refreshBtn').onclick = () => { if (state.url) connect(state.url, true); };
         $('searchInput').addEventListener('input', applyFilters);
         $('daysFilter').addEventListener('change', applyFilters);
         $('daysSort').addEventListener('change', applyFilters);
         $('pageTypeFilter').addEventListener('change', applyFilters);
-        $('reconnectLink').onclick = (e) => {
-            e.preventDefault();
-            $('dashboard').style.display = 'none';
-            $('connectPanel').style.display = 'block';
-            $('refreshBtn').style.display = 'none';
-            $('urlInput').value = state.url;
-            setStatus('', 'Not connected');
-            $('timestamp').textContent = '—';
-        };
 
+        /* Silent auto-sync every 5 minutes when tab is visible */
         setInterval(() => {
-            if (state.url && document.visibilityState === 'visible') connect(state.url, true);
-        }, 5 * 60 * 1000);
-        $('autoRefreshLabel').textContent = 'Auto-refresh · 5 min';
-
-        setStatus('', 'Not connected');
-        (function init() {
-            const saved = loadSavedUrl();
-            const autoUrl = saved || DEFAULT_CSV_URL;
-            if (autoUrl) {
-                $('urlInput').value = autoUrl;
-                connect(autoUrl);
+            if (state.url && document.visibilityState === 'visible') {
+                connect(state.url, true);
             }
-        })();
+        }, 5 * 60 * 1000);
+
+        /* Init ─ always use the baked-in URL, ignore stale overrides */
+        clearSavedUrl();
+        setStatus('', 'Connecting');
+        showLoading('initial');
+        connect(DEFAULT_CSV_URL, false);
     </script>
 </body>
 
